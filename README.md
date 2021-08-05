@@ -1,8 +1,8 @@
 check relay pins and adc pin:
 
-#define j_pin A6 
+#define j_pin A6
 #define r_pin A7
-#define adc_pin A0 
+#define adc_pin A0
 
 set real 5V voltage here
 float pwr5v_val = 4.84;
