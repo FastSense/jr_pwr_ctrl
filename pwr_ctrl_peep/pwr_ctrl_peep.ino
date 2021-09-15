@@ -10,6 +10,8 @@ float R_coeff = 4;
 #define peep_pin 9 // подключение зуммера
 #define crit_voltage 10.9
 
+#define button_pin A3
+
 #define j_pin A6
 #define r_pin A7
 #define adc_pin A0
@@ -24,7 +26,7 @@ long readingB;
 int hx711_reading_status;
 
 int counter = 0;
-
+int button = 0;
 float calcVoltage() {
   adc_val = analogRead(adc_pin);
   return (adc_val * pwr5v_val * R_coeff) / 1024;
@@ -37,6 +39,7 @@ void commonRoutine() {
   Serial.print(calcVoltage());
   Serial.print("V");
   HX711_print();
+  button_print();
 }
 
 void UART_Control() {
@@ -45,29 +48,29 @@ void UART_Control() {
     Uart_Data = Serial.read();
   }
   switch (Uart_Data) {
-  case 'J':
-    j_val = 'J';
-    digitalWrite(j_pin, HIGH);
-    commonRoutine();
-    break;
-  case 'j':
-    j_val = 'j';
-    digitalWrite(j_pin, LOW);
-    commonRoutine();
-    break;
-  case 'R':
-    r_val = 'R';
-    digitalWrite(r_pin, HIGH);
-    commonRoutine();
-    break;
-  case 'r':
-    r_val = 'r';
-    digitalWrite(r_pin, LOW);
-    commonRoutine();
-    break;
-  case '?':
-    commonRoutine();
-    break;
+    case 'J':
+      j_val = 'J';
+      digitalWrite(j_pin, HIGH);
+      commonRoutine();
+      break;
+    case 'j':
+      j_val = 'j';
+      digitalWrite(j_pin, LOW);
+      commonRoutine();
+      break;
+    case 'R':
+      r_val = 'R';
+      digitalWrite(r_pin, HIGH);
+      commonRoutine();
+      break;
+    case 'r':
+      r_val = 'r';
+      digitalWrite(r_pin, LOW);
+      commonRoutine();
+      break;
+    case '?':
+      commonRoutine();
+      break;
   }
 }
 
@@ -79,6 +82,8 @@ void IO_init() {
   digitalWrite(j_pin, LOW);
   pinMode(r_pin, OUTPUT);
   digitalWrite(r_pin, LOW);
+
+  pinMode(button_pin, INPUT_PULLUP); //B~
 }
 
 void HX711_read() {
@@ -102,15 +107,26 @@ void HX711_print() {
     scale.set_gain(32);                     // B gain 32
     Serial.print("A,");
     Serial.print(readingB + 1209022); // const for B channel
-    Serial.print("B\r\n");
+   //    Serial.print("B\r\n");
+    Serial.print("B");
   } else {
     Serial.print(",");
     Serial.print(0);    // const for A channel
     scale.set_gain(32); // B gain 32
     Serial.print("A,");
     Serial.print(0); // const for B channel
-    Serial.print("B\r\n");
+    //    Serial.print("B\r\n");
+    Serial.print("B");
   }
+}
+
+void button_print() {
+  if (button) {
+    Serial.print(",1\r\n");
+    button = 0;
+  }
+  else   Serial.print(",0\r\n");
+
 }
 
 void peepOrNotToPeep() {
@@ -135,4 +151,5 @@ void setup() {
 void loop() {
   UART_Control();
   peepOrNotToPeep();
+  if (!digitalRead(button_pin)) button = 1;
 }
